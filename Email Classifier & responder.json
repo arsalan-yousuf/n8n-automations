@@ -1,0 +1,453 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a2f17adf-28e5-4369-8225-83e1cc35eabf",
+      "name": "Gmail Trigger",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "senderName",
+              "description": "=Extract sender's name from this email, if no sender found return empty string"
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "679d696f-77b9-4b83-905e-b10752bbe225",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        220
+      ],
+      "id": "3a3c230b-af5f-4ab8-b80f-b680aa11bd80",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "325faebd-75fb-4ea9-8449-5cf8cdc177f2",
+              "name": "intro",
+              "value": "=Hi {{ $json.output.senderName }}",
+              "type": "string"
+            },
+            {
+              "id": "1e6a63f6-9760-40cd-bf3d-e39f04eb6551",
+              "name": "message_id",
+              "value": "={{ $('Gmail Trigger').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "b4d33d04-1207-4aa7-af26-3d07630b74a6",
+              "name": "thread_id",
+              "value": "={{ $('Gmail Trigger').item.json.threadId }}",
+              "type": "string"
+            },
+            {
+              "id": "ea391a83-a05d-49fa-b9ad-3ba5aae507f9",
+              "name": "text",
+              "value": "={{ $('Gmail Trigger').item.json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        600,
+        0
+      ],
+      "id": "972036b9-2c95-442e-bfde-c110b9496613",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.text }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Service Requests",
+              "description": "Questions about services offered, rates or availability."
+            },
+            {
+              "category": "Consultation Requests",
+              "description": "Scheduling initial consultations or follow-up meetings."
+            },
+            {
+              "category": "Payments",
+              "description": "Questions about invoices, payments or refunds"
+            },
+            {
+              "category": "Others",
+              "description": "Emails that doesn't fil clearly into other categories"
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "Please classify the text provided by the user into one of the following categories: {categories}, and use the provided formatting instructions below. Don't explain, and only output the json."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        820,
+        -20
+      ],
+      "id": "c1fcb272-7723-476d-a0c2-b6a23527768c",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        820,
+        200
+      ],
+      "id": "6e8bf2cd-06c5-49d4-a3c6-dd5fa4febf58",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.message_id }}",
+        "labelIds": [
+          "Label_6020652794125915827"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1960,
+        -60
+      ],
+      "id": "276366c3-292b-4e52-b725-ff80c5ab0c87",
+      "name": "Consultation Requests",
+      "webhookId": "50ca8678-9a72-407d-ae87-bbabd88713f4",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.message_id }}",
+        "labelIds": [
+          "Label_7697737543765583205"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1960,
+        -220
+      ],
+      "id": "851633fe-9184-4e5c-9478-6b97e15ed8d3",
+      "name": "Service Requests",
+      "webhookId": "50ca8678-9a72-407d-ae87-bbabd88713f4",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.message_id }}",
+        "labelIds": [
+          "Label_7636006795498717084"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1960,
+        120
+      ],
+      "id": "689abd99-e631-476c-b0ea-23a9ec0f9155",
+      "name": "Payments",
+      "webhookId": "50ca8678-9a72-407d-ae87-bbabd88713f4",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.message_id }}",
+        "labelIds": [
+          "Label_3596184468337722872"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1960,
+        300
+      ],
+      "id": "f4277401-d052-4df4-9104-725aa4f1bf1e",
+      "name": "Others",
+      "webhookId": "50ca8678-9a72-407d-ae87-bbabd88713f4",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $json.id }}",
+        "message": "={{ $('Text Classifier').item.json.intro }},\n\nThanks for contacting about our consultations",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2240,
+        -60
+      ],
+      "id": "2a2472ab-729f-44c0-b2e9-da1cfcc2be3f",
+      "name": "Reply to a message1",
+      "webhookId": "a27acc88-ac26-44e6-929a-89beaa8c6ac6",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $json.id }}",
+        "message": "={{ $('Text Classifier').item.json.intro }},\n\nThanks for contacting about payments",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2240,
+        120
+      ],
+      "id": "c4da129b-a068-47ad-b33f-da94793015f5",
+      "name": "Reply to a message2",
+      "webhookId": "a27acc88-ac26-44e6-929a-89beaa8c6ac6",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $json.id }}",
+        "message": "={{ $('Text Classifier').item.json.intro }},\n\nThanks for contacting about our services",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2240,
+        -220
+      ],
+      "id": "6c6c4991-f2de-42fc-b313-ed9852e6f24c",
+      "name": "Reply to a message3",
+      "webhookId": "a27acc88-ac26-44e6-929a-89beaa8c6ac6",
+      "credentials": {
+        
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Service Requests",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consultation Requests",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Payments",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Others",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Service Requests": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultation Requests": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Payments": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "787f8c3c-779b-4940-a5f9-3cbe6b9f8188",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6144a66e82fa63004265646e395e1dab115184480d34e9ec419eaf1921a90052"
+  },
+  "id": "fFh8G57hWjJcNCW2",
+  "tags": []
+}

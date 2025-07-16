@@ -1,0 +1,200 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1uZgDSSApFB9lSlEz6bbU_flvfZiHcxOG",
+          "mode": "list",
+          "cachedResultName": "n8n test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1uZgDSSApFB9lSlEz6bbU_flvfZiHcxOG"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8926d0ab-4e34-44dd-9930-979372d84ed7",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        220,
+        0
+      ],
+      "id": "65ae60a5-150b-4489-a4bb-ab89594b5a45",
+      "name": "Download file",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        440,
+        0
+      ],
+      "id": "04c8d4e2-6f36-4388-8312-f7cd5731eafd",
+      "name": "Transcribe a recording",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "value": "https://www.notion.so/demo-page-22ca9d10967c80bbbaf4e35f7f4a1b04",
+          "mode": "url"
+        },
+        "title": "={{ $('Download file').item.json.name }}",
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "heading_1",
+              "textContent": "Transcription"
+            },
+            {
+              "textContent": "={{ $json.message.content }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1020,
+        0
+      ],
+      "id": "26554988-72b7-42e8-b51e-9df58420b90f",
+      "name": "Create a page",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Transcript:  {{ $json.text }}"
+            },
+            {
+              "content": "Instruction:\n Summarize the audio content into plain text, following the structure below.\n Rules:\n The entire summary must not exceed 1500 characters.\n Include and label all the following sections: title, summary, main_points, action_ite\n Keep the style clear, concise, and organized.\n Use short, natural-sounding bullet points for lists.\n Example formatting:\n diff\n Copy\n Edit\n title: Notion Buttons\n summary: A collection of buttons for Notion that streamline workflow and save tim\n main_points:\n  Overview of Notion buttons\n  Examples of button use cases\n  Best practices for setup\n action_items:\n  Test different button templates\n  Implement buttons in daily workflows\n  Share templates with team\n follow_up:\n  Explore advanced button integrations\n Gather team feedback on usage\n stories:\n  A team improved productivity by 30% using custom buttons\n references:\n  Official Notion documentation\n  Community tutorials on Notion workflows\n arguments:\n  Buttons reduce repetitive tasks\n  Custom buttons enhance flexibility\n related_topics:\n  Notion automations\n  Workflow optimization\n  Team collaboration tools"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        660,
+        0
+      ],
+      "id": "1b547d47-6405-4621-ae70-ec114e7af606",
+      "name": "Message a model",
+      "credentials": {
+        
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Create a page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e27e04c8-7749-4f18-980a-e95e17ab1d35",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6144a66e82fa63004265646e395e1dab115184480d34e9ec419eaf1921a90052"
+  },
+  "id": "fFh8G57hWjJcNCW2",
+  "tags": []
+}

@@ -1,0 +1,122 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "86c3a238-bb86-4cd9-bf95-8d8650bdeb6f",
+      "name": "Telegram Trigger",
+      "webhookId": "96cfbc2d-51b9-49c9-b45e-a5702ea62a90",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "b8ccd15c-c862-48f5-8415-13dd4ca95478",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        240,
+        220
+      ],
+      "id": "1649c703-fb18-4ac0-9a92-06bb5b1902e8",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        580,
+        0
+      ],
+      "id": "e5945f16-2e9e-4c17-a2e3-e8cf147e8104",
+      "name": "Send a text message",
+      "webhookId": "c43b8fa6-489c-4fb1-a087-73b92e3ad694",
+      "credentials": {
+        
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b3107939-1445-4013-a139-faff5494adce",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6144a66e82fa63004265646e395e1dab115184480d34e9ec419eaf1921a90052"
+  },
+  "id": "fFh8G57hWjJcNCW2",
+  "tags": []
+}

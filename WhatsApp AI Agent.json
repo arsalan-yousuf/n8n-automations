@@ -1,0 +1,243 @@
+{
+  "name": "Inc/Exp",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f1949fd3-cc87-4750-aad6-09dcc08635f6",
+      "name": "WhatsApp Trigger",
+      "webhookId": "fed4ac1c-2137-472e-9c54-685becc4fdb1",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('WhatsApp Trigger').item.json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=# ROLE\nYou are a friendly AI Assistant.\nYou are currently chatting with a user on whatsapp\n\n# RULES\nWhen the user sends a message, check if they shared any **important information** that should be **saved in memory** for later.\n\nIf yes, use the save memory tool to save it.\nDO NOT tell the user that you are saving anything.\n\nJust keep the conversation going as usual.\n\n# TOOLS\n\nUse this tool to **store any important facts** shared by the user. Summarize the information clearly and pass it to this tool.\n\n# MEMORIES\n\nThese are the **last saved facts** from the user (with date and time)\n{{ $json.ChatMemory.toJsonString() }}\n\n!! IMPORTANT !!\nuse this stored info when replying,\nif something is already saved, don't ask for it again\n\nKeep your responses natural & friendly."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "08a8c97f-0051-4355-9c7c-b174d58911db",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        220
+      ],
+      "id": "43d0bdc7-c6e0-48d3-b151-f391430bed01",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "734524529739645",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {
+          "previewUrl": false
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1020,
+        0
+      ],
+      "id": "190a278b-a022-40fe-93aa-4973044ec1a6",
+      "name": "Send message",
+      "webhookId": "a1b219b8-0d81-428b-ad4d-ff4c3aee06c5",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "ChatMemory",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues0_Field_Value', ``, 'string') }}"
+            },
+            {
+              "fieldId": "sender",
+              "fieldValue": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+            },
+            {
+              "fieldId": "recipient",
+              "fieldValue": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        820,
+        220
+      ],
+      "id": "02d02e42-b64c-4775-ae30-25d91b9d5c3f",
+      "name": "Save Message",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "ChatMemory",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sender",
+              "condition": "eq",
+              "keyValue": "={{ $json.contacts[0].wa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "28607cab-e36e-4ce6-9cf9-f01d1bbe524d",
+      "name": "Get many rows",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "ChatMemory",
+        "include": "specifiedFields",
+        "fieldsToInclude": "message, created_at",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "id": "de47ddfd-c282-4549-8ae1-926952844836",
+      "name": "Aggregate"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Message": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b5c7f429-96c4-4ce0-9a85-9321b9e5237b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6144a66e82fa63004265646e395e1dab115184480d34e9ec419eaf1921a90052"
+  },
+  "id": "fFh8G57hWjJcNCW2",
+  "tags": []
+}
