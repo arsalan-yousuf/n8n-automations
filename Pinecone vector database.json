@@ -1,0 +1,425 @@
+{
+  "name": "Pinecone vector database",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1uZgDSSApFB9lSlEz6bbU_flvfZiHcxOG",
+          "mode": "list",
+          "cachedResultName": "n8n test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1uZgDSSApFB9lSlEz6bbU_flvfZiHcxOG"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "96850de8-7012-40a2-a6e1-662066cee5a8",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        220,
+        0
+      ],
+      "id": "312eea05-0297-422c-972d-217e8f8841eb",
+      "name": "Download file",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n-demo",
+          "mode": "list",
+          "cachedResultName": "n8n-demo"
+        },
+        "options": {
+          "pineconeNamespace": "ragagent"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        440,
+        0
+      ],
+      "id": "58f41f3a-a120-4aea-b4e4-eb29392c059a",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        200
+      ],
+      "id": "f048cdfd-47f4-4af9-9c9f-94c34ada3114",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "loader": "pdfLoader",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "TerzettoData",
+                "value": "={{ $json.name }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        540,
+        200
+      ],
+      "id": "21dfe266-80b4-499f-923f-f473413d4cce",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 900,
+        "chunkOverlap": 50,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        540,
+        400
+      ],
+      "id": "c3d32137-2b1b-4aa4-827d-32006312fef5",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=our agency: Terzetto\n\n#Role\nYou are an AI assistant trained to answer questions to our  web3 & AI development agaency, related documents stored in the connected vector database.\n\n#Objective\nYour job is to help users clearly understand the services offered by terzetto/us, its past projects & clients reviews — by retrieving and referencing only the information available in the documents stored in the vector store.\n\nIf a user asks something that’s not included in the uploaded content, or if the answer isn’t clear from the available data, let them know that the information isn't currently available.\n\n#Rules\n\n- Be clear and direct — avoid over-explaining.(Use 2-5 sentences)\n\n- Use bullet points or short paragraphs when listing multiple features/services.\n\n- Never guess or assume — stick strictly to what’s inside the vector database content.\n\nYour main objective: Deliver helpful, accurate, and easy-to-understand answers using only the documents available in the vector store — no speculation, no extra assumptions, and no external sources.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1240,
+        -20
+      ],
+      "id": "896f842c-69a9-4539-8454-cfdf2baa8d24",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1140,
+        200
+      ],
+      "id": "e563572d-093d-49b4-9d25-305231ba56d7",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1300,
+        200
+      ],
+      "id": "958cc792-6511-496c-adeb-2c831008feb5",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n-1536",
+          "mode": "list",
+          "cachedResultName": "n8n-1536"
+        },
+        "options": {
+          "pineconeNamespace": "ragagent"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        1380,
+        400
+      ],
+      "id": "aa4f9e40-523c-4ad4-83ef-401e04b177a0",
+      "name": "Pinecone Vector Store1",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1540,
+        580
+      ],
+      "id": "7fd0616f-862f-4905-9fca-6c63f6f3198b",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        400
+      ],
+      "id": "2d7f65a8-e362-4491-a10a-9c071fc90352",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+       
+      }
+    },
+    {
+      "parameters": {
+        "description": "=Useful for when you need to answer questions about our AI & web3 development agency--Terzetto. It finds and returns the most relevant information from the documents in the vector database — like Services offered, previous projects, client reviews, contact details etc. Whenever you need information about our agency, you should ALWAYS use this."
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        1460,
+        200
+      ],
+      "id": "24b7b08f-ac43-45ab-801e-376fb2150f7a",
+      "name": "Terzetto Data"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1020,
+        -20
+      ],
+      "id": "58c350c5-b4f1-40a8-96f3-cfdeaf6ad8e4",
+      "name": "When chat message received",
+      "webhookId": "6a462676-dde5-4a6d-b4d9-8ffe4170a806"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store1": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Terzetto Data",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Terzetto Data",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Terzetto Data": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b0014cff-37d5-4d33-828d-0ffcf39caa11",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6144a66e82fa63004265646e395e1dab115184480d34e9ec419eaf1921a90052"
+  },
+  "id": "fFh8G57hWjJcNCW2",
+  "tags": []
+}
