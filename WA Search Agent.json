@@ -1,0 +1,240 @@
+{
+  "name": "WA Search Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        0
+      ],
+      "id": "266e145a-3938-4cbc-8907-bdbce60a777a",
+      "name": "WhatsApp Trigger",
+      "webhookId": "ee2deb25-0ad9-47fc-bccf-1fcfd45e785a",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=*Role:*\n\nYou are an AI Planner Agent responsible for generating structured, actionable task plans. Your goal is to breakdown objectives into clear steps that guide execution.\n\n*Instruction:*\n\n- Receive the user request and analyze the goal.\n- Create a structured plan with sequential steps.\n- Identify tasks that require finding locations, services or resources.\n- Include relevant details such as budget, preferences, and key requirements.\n- Format output clearly as structured JSON for easy processing.\n- Ensure steps needing external searches are clearly marked."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ae058718-6abd-4061-9a81-2dfabb0a7160",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1-distill-llama-70b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        208,
+        192
+      ],
+      "id": "62f735e9-6f89-4967-90e9-9aa5b6c24dab",
+      "name": "Groq Chat Model",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.contacts[0].wa_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        192
+      ],
+      "id": "54352a49-66f2-42c6-93b9-b806b50b4041",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "=Role:\nYou are an AI Search Agent with access to SerpAPI. Your task is to find relevant locations, services, and resources based on the plan created by the AI Planner Agent.\n\nInstructions:\n\n- Receive the structured task plan from the planner agent as {{ $json.output }}.\n- Identify any steps that involve finding specific places, services, or resources.\n- Use SerpAPI to search for relevant results.\n- If a step involves finding a place (e.g., coworking spaces, hotels, restaurants), provide:\n- Direct links for booking or more details.\n  - Name\n  - Website\n  - Location\n  \n- If a step requires booking services, include official links.\n- Format the response clearly without using special characters such as #, *, -, or markdown formatting.\n- Prioritize trusted sources and ensure links are actionable.\n- PROVIDES AS MUCH DETAILS AS POSSIBLE.\n- Ensure the output is structured and easy to read.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        0
+      ],
+      "id": "102b35ac-ae5d-4432-824d-1e8764d1e3db",
+      "name": "Research Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        192
+      ],
+      "id": "a9e67a9c-d8c8-459e-a1a0-990876ae037c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        752,
+        192
+      ],
+      "id": "0d258c4e-918d-4de6-8f15-c2f80c3d0214",
+      "name": "SerpAPI",
+      "credentials": {
+        
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "734524529739645",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        912,
+        0
+      ],
+      "id": "3fbe9042-eb69-46d7-86fd-89c83ce21b29",
+      "name": "Send message",
+      "webhookId": "07574057-3a40-42c0-b72d-e6e8a2b171d2",
+      "credentials": {
+       
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ecc05650-653f-44bc-8fc7-83bd48e36667",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "db92d09717e5df1c418f9998b6f4c3f45c67b18575f1ae169b226c3c191daa55"
+  },
+  "id": "zbP8aIFsJK8lEylE",
+  "tags": []
+}
